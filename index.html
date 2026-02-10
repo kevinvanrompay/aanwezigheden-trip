@@ -1,122 +1,333 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8">
-<title>Aanwezigheden Trip</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Aanwezigheden — Manchester City thema</title>
 <style>
-body { font-family: system-ui, sans-serif; background:#f5f5f5; margin:0; padding:1rem; }
-.card { background:white; padding:1rem; border-radius:12px; margin-bottom:1rem; box-shadow:0 2px 6px rgba(0,0,0,.1); }
-h1,h2 { margin-top:0 }
-button { padding:.5rem 1rem; border:none; border-radius:999px; background:#2563eb; color:white; font-size:1rem }
-button.secondary { background:#e5e7eb; color:black }
-button.danger { background:#dc2626 }
-input { width:100%; padding:.5rem; margin-top:.3rem; border-radius:8px; border:1px solid #ccc }
-.list { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:.4rem }
-.item { display:flex; gap:.5rem; align-items:center; background:#f9fafb; padding:.3rem .5rem; border-radius:8px }
-.small { font-size:.85rem; color:#555 }
-table { width:100%; border-collapse:collapse }
-th,td { border-bottom:1px solid #ddd; padding:.4rem }
+  /* ===== Basis & layout ===== */
+  :root{
+    --mc-light:#c0e6fb;
+    --mc-mid:#6cabdd;
+    --mc-dark:#1c2c5b;
+    --card-bg: #ffffff;
+    --muted:#6b7280;
+    --accent: var(--mc-mid);
+    --radius:14px;
+  }
+  html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,#bfe7fb 0%, #eaf6ff 60%);color:#072038}
+  .wrap{max-width:980px;margin:20px auto;padding:16px}
+  h1{margin:0 0 6px;font-size:28px;color:var(--mc-dark)}
+  .lead{margin:0 0 18px;color:var(--muted)}
+  .card{background:var(--card-bg);border-radius:var(--radius);padding:18px;margin-bottom:18px;box-shadow:0 8px 30px rgba(28,44,91,0.08)}
+  .flex{display:flex;gap:12px;align-items:center}
+  .right{margin-left:auto}
+
+  /* ===== logo ===== */
+  .logo-wrap{display:flex;align-items:center;gap:12px}
+  .logo{width:84px;height:84px;border-radius:999px;overflow:hidden;flex:0 0 84px;display:inline-block;box-shadow:0 6px 18px rgba(28,44,91,0.12)}
+  .site-title{font-size:18px;font-weight:700;color:var(--mc-dark)}
+
+  /* ===== deelnemers textarea ===== */
+  textarea{width:100%;min-height:140px;padding:12px;border-radius:10px;border:1px solid rgba(28,44,91,0.08);font-size:15px;resize:vertical}
+
+  /* ===== knoppen ===== */
+  .btn{padding:10px 14px;border-radius:999px;border:none;background:var(--accent);color:white;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(33,120,190,0.15)}
+  .btn.secondary{background:#eef6fb;color:var(--mc-dark);box-shadow:none;border:1px solid rgba(28,44,91,0.04)}
+  .btn.danger{background:#ef4444}
+
+  /* ===== checklist grid (touch friendly) ===== */
+  .check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+  @media(min-width:920px){ .check-grid{grid-template-columns:repeat(3,minmax(0,1fr))} }
+  .check-item{
+    display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:#f6fbff;border:1px solid rgba(108,164,201,0.12);
+    cursor:pointer; user-select:none;
+  }
+  .check-item input{width:22px;height:22px;border-radius:6px;flex:0 0 22px;cursor:pointer}
+  .name{font-size:15px;color:var(--mc-dark)}
+
+  /* increase tap area when clicking label */
+  label.check-label{display:block}
+
+  /* ===== overzicht tabel ===== */
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}
+  th,td{padding:8px;border-bottom:1px solid #eef6fb;text-align:left}
+  th{background:linear-gradient(90deg,var(--mc-light),#fff);color:var(--mc-dark);font-weight:700}
+  .tag-present{color:green;font-weight:700}
+  .tag-absent{color:#b91c1c;font-weight:700}
+
+  /* ===== modal ===== */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:none;align-items:center;justify-content:center;z-index:50}
+  .modal{background:white;padding:16px;border-radius:12px;max-width:720px;width:calc(100% - 28px);max-height:80vh;overflow:auto}
+  .modal h3{margin-top:0}
+
+  /* small text */
+  .small{font-size:13px;color:var(--muted)}
+  .chip{display:inline-block;padding:6px 10px;border-radius:999px;background:#eef6fb;color:var(--mc-dark);font-weight:600;margin-left:8px}
 </style>
 </head>
-
 <body>
+  <div class="wrap">
+    <div class="card logo-wrap" style="align-items:center;">
+      <!-- Logo file (upload naar repo als: man_city_logo.png) -->
+      <div class="logo">
+        <img id="clubLogo" src="man_city_logo.png" alt="Manchester City" style="width:100%;height:100%;object-fit:cover" />
+      </div>
+      <div>
+        <h1>Aanwezigheden — Manchester City</h1>
+        <p class="lead">Namen invoeren, bij iedere controle afvinken. Onderaan rapporten exporteren (CSV). Alles lokaal opgeslagen in je browser.</p>
+      </div>
+      <div class="right small"><span class="chip" id="counts">0 deelnemers</span></div>
+    </div>
 
-<h1>Aanwezigheden – Trip</h1>
+    <!-- Deelnemers -->
+    <div class="card" id="participantsCard">
+      <h2>1. Deelnemerslijst</h2>
+      <label class="small">Namen (één per lijn)</label>
+      <textarea id="namesInput" placeholder="Één naam per regel"></textarea>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="saveNamesBtn">Namen opslaan</button>
+        <button class="btn secondary" id="loadNamesBtn">Laatste lijst laden</button>
+        <button class="btn secondary" id="prefillBtn">Vaste MCFC-lijst laden</button>
+      </div>
+      <p class="small" id="namesStatus" style="margin-top:8px"></p>
+    </div>
 
-<div class="card">
-<h2>Deelnemers (vast)</h2>
-<p class="small">Deze lijst is vooraf ingesteld.</p>
-<ul class="small" id="participantList"></ul>
-</div>
+    <!-- Nieuwe controle -->
+    <div class="card">
+      <h2>2. Nieuwe controle <span class="small" style="margin-left:8px">Live bij het opstappen</span></h2>
 
-<div class="card">
-<h2>Nieuwe controle</h2>
+      <label class="small">Omschrijving van deze controle</label>
+      <input id="controlLabel" type="text" placeholder="Bijv. 'Bus heen – dag 1 ochtend'" style="padding:10px;border-radius:10px;border:1px solid rgba(28,44,91,0.08);width:100%;margin-top:6px" />
 
-<label>Omschrijving</label>
-<input id="label" placeholder="bv. Bus heen – dag 1">
+      <div style="margin-top:10px" class="flex">
+        <div class="small">Nu: <strong id="nowPreview"></strong></div>
+        <div class="right">
+          <button class="btn secondary" id="selectAllBtn">Alles aanwezig</button>
+          <button class="btn secondary" id="clearAllBtn">Alles uitvinken</button>
+        </div>
+      </div>
 
-<div id="checkboxes" class="list"></div>
+      <div id="checkboxContainer" class="check-grid" style="margin-top:12px"></div>
 
-<br>
-<button onclick="saveControl()">Controle opslaan</button>
-<p class="small" id="status"></p>
-</div>
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <button class="btn" id="saveControlBtn">Controle opslaan</button>
+        <button class="btn secondary" id="resetChecksBtn">Opnieuw beginnen</button>
+      </div>
+      <p class="small" id="controlStatus" style="margin-top:8px"></p>
+    </div>
 
-<div class="card">
-<h2>Overzicht</h2>
-<button class="secondary" onclick="exportCSV()">CSV export</button>
-<table>
-<thead>
-<tr><th>#</th><th>Datum</th><th>Omschrijving</th><th>Aanwezig</th><th>Afwezig</th></tr>
-</thead>
-<tbody id="table"></tbody>
-</table>
-</div>
+    <!-- Overzicht -->
+    <div class="card">
+      <h2>3. Overzicht & rapport</h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn secondary" id="exportCsvBtn">Exporteer als CSV</button>
+        <button class="btn danger" id="clearAllDataBtn">Alles wissen</button>
+        <div class="right small" style="margin-left:auto"><span id="controlCount">0 controles</span></div>
+      </div>
+
+      <table aria-label="Overzicht controles">
+        <thead>
+          <tr><th>#</th><th>Datum / tijd</th><th>Omschrijving</th><th>Aanwezig</th><th>Afwezig</th><th>Details</th></tr>
+        </thead>
+        <tbody id="controlsTableBody">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal details -->
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div style="display:flex;align-items:center;gap:8px">
+        <h3>Details controle</h3>
+        <div class="right"><button class="btn secondary" id="closeModalBtn">Sluiten</button></div>
+      </div>
+      <p class="small" id="modalHeader"></p>
+      <ul id="modalList" class="small" style="padding-left:6px;margin-top:8px"></ul>
+    </div>
+  </div>
 
 <script>
-const participants = [
-"Nele Adriaens","Stijn Hombroux","Bart Willems","Marjo Bollen (Petronella)",
-"Joeri Buttiens","Tim Goossens","Nico Vorsselmans","Wietske Schaapman",
-"Kevin Van Rompay","Stefanie Heeren","Eline Bijnens","Vic Vanhove",
-"Jarne Hombroux","Lino Carlos","Tuur Buttiens","Kian Willems",
-"Nathan Goossens","Alexander Vorsselmans","Scott Bijnens","Nikola Volev"
+/* ===== Data model ===== */
+const STORAGE_KEY = "mcfc_attendance_v1";
+
+/* ===== Vooraf ingestelde deelnemers: jouw lijst (ouders + spelers) ===== */
+const PRESET_PARTICIPANTS = [
+  "Nele Adriaens","Stijn Hombroux","Bart Willems","Marjo Bollen (Petronella)","Joeri Buttiens",
+  "Tim Goossens","Nico Vorsselmans","Wietske Schaapman","Kevin Van Rompay","Stefanie Heeren",
+  "Eline Bijnens","Vic Vanhove","Jarne Hombroux","Lino Carlos","Tuur Buttiens","Kian Willems",
+  "Nathan Goossens","Alexander Vorsselmans","Scott Bijnens","Nikola Volev"
 ];
 
-const STORAGE = "trip_attendance";
-let data = JSON.parse(localStorage.getItem(STORAGE)) || [];
+let state = {
+  participants: [], // [{id, name}]
+  controls: []      // [{id, timestamp, label, attendance: {pid:true/false}}]
+};
 
-const list = document.getElementById("participantList");
-participants.forEach(n => {
-  const li=document.createElement("li"); li.textContent=n; list.appendChild(li);
+/* ===== Helpers ===== */
+function uid(prefix='u'){return prefix + Math.random().toString(36).slice(2,9)}
+function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); refreshSummary()}
+function loadState(){const raw = localStorage.getItem(STORAGE_KEY); if(raw){ try{ const p = JSON.parse(raw); if(p && Array.isArray(p.participants) && Array.isArray(p.controls)){ state = p } }catch(e){console.error(e)} } }
+function formatDateTime(isoOrDate){
+  const d = (isoOrDate instanceof Date) ? isoOrDate : new Date(isoOrDate);
+  return d.toLocaleString("nl-BE", {year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+}
+function refreshSummary(){
+  document.getElementById("counts").textContent = `${state.participants.length} deelnemers`;
+  document.getElementById("controlCount").textContent = `${state.controls.length} controle${state.controls.length === 1 ? '' : 's'}`;
+  renderControlsTable();
+}
+
+/* ===== Participants UI ===== */
+const namesInput = document.getElementById("namesInput");
+document.getElementById("saveNamesBtn").addEventListener("click", ()=>{
+  const lines = namesInput.value.split(/\r?\n/).map(l=>l.trim()).filter(l=>l);
+  const unique = Array.from(new Set(lines));
+  state.participants = unique.map((name,i)=>({id: 'p'+i+'_'+name.replace(/\s+/g,'_'), name}));
+  saveState();
+  document.getElementById("namesStatus").textContent = `Lijst opgeslagen (${state.participants.length} namen).`;
+  buildCheckboxes();
+});
+document.getElementById("loadNamesBtn").addEventListener("click", ()=> {
+  namesInput.value = state.participants.map(p=>p.name).join("\n");
+  document.getElementById("namesStatus").textContent = state.participants.length ? `Lijst geladen (${state.participants.length} namen).` : "Nog geen lijst opgeslagen.";
+});
+document.getElementById("prefillBtn").addEventListener("click", ()=>{
+  namesInput.value = PRESET_PARTICIPANTS.join("\n");
+  document.getElementById("namesStatus").textContent = "Preset geladen; klik 'Namen opslaan' om te bewaren.";
 });
 
-function buildChecklist(){
-  const c=document.getElementById("checkboxes"); c.innerHTML="";
-  participants.forEach(n=>{
-    const d=document.createElement("div"); d.className="item";
-    d.innerHTML=`<input type="checkbox" checked> ${n}`;
-    c.appendChild(d);
+/* ===== Build checklist (touch friendly) ===== */
+function buildCheckboxes(){
+  const c = document.getElementById("checkboxContainer");
+  c.innerHTML = "";
+  if(!state.participants.length){
+    c.innerHTML = '<div class="small">Geen deelnemers. Vul namen in en klik "Namen opslaan".</div>';
+    document.getElementById("saveControlBtn").disabled = true;
+    return;
+  }
+  state.participants.forEach(p=>{
+    const id = uid('cb_');
+    const label = document.createElement("label");
+    label.className = "check-label";
+    label.innerHTML = `
+      <div class="check-item">
+        <input aria-label="Aanwezigheid ${p.name}" type="checkbox" data-pid="${p.id}" checked />
+        <div class="name">${p.name}</div>
+      </div>`;
+    c.appendChild(label);
+  });
+  document.getElementById("saveControlBtn").disabled = false;
+}
+
+/* select/clear all */
+document.getElementById("selectAllBtn").addEventListener("click", ()=> {
+  document.querySelectorAll("#checkboxContainer input[type=checkbox]").forEach(cb=>cb.checked=true);
+});
+document.getElementById("clearAllBtn").addEventListener("click", ()=> {
+  document.querySelectorAll("#checkboxContainer input[type=checkbox]").forEach(cb=>cb.checked=false);
+});
+document.getElementById("resetChecksBtn").addEventListener("click", buildCheckboxes);
+
+/* ===== Save control ===== */
+document.getElementById("saveControlBtn").addEventListener("click", saveCurrentControl);
+function saveCurrentControl(){
+  if(!state.participants.length){ alert("Voeg eerst deelnemers toe."); return; }
+  const label = document.getElementById("controlLabel").value.trim();
+  const checks = Array.from(document.querySelectorAll("#checkboxContainer input[type=checkbox]"));
+  if(!checks.length){ alert("Geen checkboxes gevonden. Klik 'Namen opslaan' en bouw de lijst."); return; }
+  const attendance = {};
+  checks.forEach(cb => attendance[cb.dataset.pid] = !!cb.checked);
+  const ctrl = { id: 'c_'+Date.now(), timestamp: new Date().toISOString(), label, attendance };
+  state.controls.push(ctrl);
+  saveState();
+  const presentCount = Object.values(attendance).filter(Boolean).length;
+  const absentCount = state.participants.length - presentCount;
+  document.getElementById("controlStatus").innerHTML = `Controle opgeslagen. Aanwezig: <strong>${presentCount}</strong>, afwezig: <strong>${absentCount}</strong>.`;
+  // keep current UI state (you can reset checks with button)
+  renderControlsTable();
+}
+
+/* ===== Render controls table ===== */
+function renderControlsTable(){
+  const tbody = document.getElementById("controlsTableBody"); tbody.innerHTML = "";
+  if(!state.controls.length){
+    const tr = document.createElement("tr"); tr.innerHTML = `<td colspan="6" class="small">Nog geen controles opgeslagen.</td>`; tbody.appendChild(tr); return;
+  }
+  state.controls.slice().sort((a,b)=> new Date(b.timestamp)-new Date(a.timestamp)).forEach((c,i)=>{
+    const presentCount = state.participants.filter(p => c.attendance[p.id]).length;
+    const absentCount = state.participants.length - presentCount;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${i+1}</td><td>${formatDateTime(c.timestamp)}</td><td>${c.label || '(geen omschrijving)'}</td>
+                    <td><span class="tag-present">${presentCount}</span></td>
+                    <td><span class="tag-absent">${absentCount}</span></td>
+                    <td><button class="btn secondary" onclick="openDetails('${c.id}')">Details</button></td>`;
+    tbody.appendChild(tr);
   });
 }
 
-function saveControl(){
-  const checks=[...document.querySelectorAll("#checkboxes input")];
-  const label=document.getElementById("label").value;
-  const present=checks.filter(c=>c.checked).length;
-  data.push({
-    time:new Date().toLocaleString("nl-BE"),
-    label,
-    present
+/* ===== Modal details ===== */
+function openDetails(controlId){
+  const control = state.controls.find(x=>x.id===controlId);
+  if(!control) return;
+  document.getElementById("modalHeader").textContent = `${formatDateTime(control.timestamp)} — ${control.label || '(geen omschrijving)'}`;
+  const list = document.getElementById("modalList"); list.innerHTML = "";
+  state.participants.forEach(p=>{
+    const li = document.createElement("li");
+    const present = !!control.attendance[p.id];
+    li.innerHTML = `<strong>${p.name}</strong> — <span class="${present ? 'tag-present' : 'tag-absent'}">${present ? 'Aanwezig' : 'Afwezig'}</span>`;
+    list.appendChild(li);
   });
-  localStorage.setItem(STORAGE,JSON.stringify(data));
-  document.getElementById("status").textContent="Controle opgeslagen ✔";
-  buildChecklist();
-  render();
+  document.getElementById("modalBackdrop").style.display = "flex";
+}
+document.getElementById("closeModalBtn").addEventListener("click", ()=> document.getElementById("modalBackdrop").style.display = "none");
+document.getElementById("modalBackdrop").addEventListener("click", e=> { if(e.target.id === 'modalBackdrop') document.getElementById("modalBackdrop").style.display = "none"; });
+
+/* ===== CSV Export ===== */
+document.getElementById("exportCsvBtn").addEventListener("click", exportCsv);
+function exportCsv(){
+  if(!state.controls.length){ alert("Geen controles om te exporteren."); return; }
+  const headers = ["Controle #","Datum/Tijd","Omschrijving","Naam","Aanwezig"];
+  const rows = [headers];
+  const sorted = state.controls.slice().sort((a,b)=> new Date(a.timestamp)-new Date(b.timestamp));
+  sorted.forEach((c, idx)=>{
+    state.participants.forEach(p=>{
+      rows.push([idx+1, formatDateTime(c.timestamp), c.label || '', p.name, c.attendance[p.id] ? 'JA' : 'NEE']);
+    });
+  });
+  const csv = rows.map(r => r.map(cell => {
+    const v = String(cell ?? '');
+    if(v.includes(';') || v.includes(',') || v.includes('"') || v.includes("\n")) return `"${v.replace(/"/g,'""')}"`;
+    return v;
+  }).join(";")).join("\n");
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'}); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'aanwezigheden_mcfc.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
 }
 
-function render(){
-  const t=document.getElementById("table"); t.innerHTML="";
-  data.forEach((c,i)=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${i+1}</td><td>${c.time}</td><td>${c.label}</td>
-                  <td>${c.present}</td><td>${participants.length-c.present}</td>`;
-    t.appendChild(tr);
-  });
-}
+/* ===== Clear all data ===== */
+document.getElementById("clearAllDataBtn").addEventListener("click", ()=>{
+  if(!confirm("Weet je zeker dat je alle gegevens (namen + controles) wil wissen?")) return;
+  state = {participants:[],controls:[]}; saveState();
+  namesInput.value = ''; document.getElementById("checkboxContainer").innerHTML = ''; document.getElementById("controlStatus").textContent = ''; document.getElementById("namesStatus").textContent = 'Alle gegevens gewist.';
+});
 
-function exportCSV(){
-  let csv="Nr;Datum;Omschrijving;Aanwezig;Afwezig\n";
-  data.forEach((c,i)=>{
-    csv+=`${i+1};${c.time};${c.label};${c.present};${participants.length-c.present}\n`;
-  });
-  const b=new Blob([csv]); const a=document.createElement("a");
-  a.href=URL.createObjectURL(b); a.download="aanwezigheden.csv"; a.click();
-}
+/* ===== Now preview ===== */
+function updateNowPreview(){ document.getElementById("nowPreview").textContent = new Date().toLocaleString("nl-BE",{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) }
+setInterval(updateNowPreview, 30000); updateNowPreview();
 
-buildChecklist(); render();
+/* ===== Init: load state, prefill participants if empty, build UI ===== */
+(function init(){
+  loadState();
+  if(!state.participants.length){
+    // prefill from preset by default (you can remove this if you prefer empty)
+    state.participants = PRESET_PARTICIPANTS.map((name,i)=>({id:'p'+i+'_'+name.replace(/\s+/g,'_'), name}));
+    saveState();
+  }
+  namesInput.value = state.participants.map(p=>p.name).join("\n");
+  buildCheckboxes();
+  refreshSummary();
+})();
 </script>
-
 </body>
 </html>
