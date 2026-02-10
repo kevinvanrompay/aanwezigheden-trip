@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Aanwezigheden Trip</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body { font-family: system-ui, sans-serif; background:#f5f5f5; margin:0; padding:1rem; }
+.card { background:white; padding:1rem; border-radius:12px; margin-bottom:1rem; box-shadow:0 2px 6px rgba(0,0,0,.1); }
+h1,h2 { margin-top:0 }
+button { padding:.5rem 1rem; border:none; border-radius:999px; background:#2563eb; color:white; font-size:1rem }
+button.secondary { background:#e5e7eb; color:black }
+button.danger { background:#dc2626 }
+input { width:100%; padding:.5rem; margin-top:.3rem; border-radius:8px; border:1px solid #ccc }
+.list { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:.4rem }
+.item { display:flex; gap:.5rem; align-items:center; background:#f9fafb; padding:.3rem .5rem; border-radius:8px }
+.small { font-size:.85rem; color:#555 }
+table { width:100%; border-collapse:collapse }
+th,td { border-bottom:1px solid #ddd; padding:.4rem }
+</style>
+</head>
+
+<body>
+
+<h1>Aanwezigheden – Trip</h1>
+
+<div class="card">
+<h2>Deelnemers (vast)</h2>
+<p class="small">Deze lijst is vooraf ingesteld.</p>
+<ul class="small" id="participantList"></ul>
+</div>
+
+<div class="card">
+<h2>Nieuwe controle</h2>
+
+<label>Omschrijving</label>
+<input id="label" placeholder="bv. Bus heen – dag 1">
+
+<div id="checkboxes" class="list"></div>
+
+<br>
+<button onclick="saveControl()">Controle opslaan</button>
+<p class="small" id="status"></p>
+</div>
+
+<div class="card">
+<h2>Overzicht</h2>
+<button class="secondary" onclick="exportCSV()">CSV export</button>
+<table>
+<thead>
+<tr><th>#</th><th>Datum</th><th>Omschrijving</th><th>Aanwezig</th><th>Afwezig</th></tr>
+</thead>
+<tbody id="table"></tbody>
+</table>
+</div>
+
+<script>
+const participants = [
+"Nele Adriaens","Stijn Hombroux","Bart Willems","Marjo Bollen (Petronella)",
+"Joeri Buttiens","Tim Goossens","Nico Vorsselmans","Wietske Schaapman",
+"Kevin Van Rompay","Stefanie Heeren","Eline Bijnens","Vic Vanhove",
+"Jarne Hombroux","Lino Carlos","Tuur Buttiens","Kian Willems",
+"Nathan Goossens","Alexander Vorsselmans","Scott Bijnens","Nikola Volev"
+];
+
+const STORAGE = "trip_attendance";
+let data = JSON.parse(localStorage.getItem(STORAGE)) || [];
+
+const list = document.getElementById("participantList");
+participants.forEach(n => {
+  const li=document.createElement("li"); li.textContent=n; list.appendChild(li);
+});
+
+function buildChecklist(){
+  const c=document.getElementById("checkboxes"); c.innerHTML="";
+  participants.forEach(n=>{
+    const d=document.createElement("div"); d.className="item";
+    d.innerHTML=`<input type="checkbox" checked> ${n}`;
+    c.appendChild(d);
+  });
+}
+
+function saveControl(){
+  const checks=[...document.querySelectorAll("#checkboxes input")];
+  const label=document.getElementById("label").value;
+  const present=checks.filter(c=>c.checked).length;
+  data.push({
+    time:new Date().toLocaleString("nl-BE"),
+    label,
+    present
+  });
+  localStorage.setItem(STORAGE,JSON.stringify(data));
+  document.getElementById("status").textContent="Controle opgeslagen ✔";
+  buildChecklist();
+  render();
+}
+
+function render(){
+  const t=document.getElementById("table"); t.innerHTML="";
+  data.forEach((c,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${i+1}</td><td>${c.time}</td><td>${c.label}</td>
+                  <td>${c.present}</td><td>${participants.length-c.present}</td>`;
+    t.appendChild(tr);
+  });
+}
+
+function exportCSV(){
+  let csv="Nr;Datum;Omschrijving;Aanwezig;Afwezig\n";
+  data.forEach((c,i)=>{
+    csv+=`${i+1};${c.time};${c.label};${c.present};${participants.length-c.present}\n`;
+  });
+  const b=new Blob([csv]); const a=document.createElement("a");
+  a.href=URL.createObjectURL(b); a.download="aanwezigheden.csv"; a.click();
+}
+
+buildChecklist(); render();
+</script>
+
+</body>
+</html>
